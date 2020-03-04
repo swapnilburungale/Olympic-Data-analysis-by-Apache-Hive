@@ -1,0 +1,66 @@
+* transfer th data to hdfs :
+
+
+[root@swap ~]# hadoop fs -put '/home/matlab/Olympic%20Project/olympic_data.csv' /user/hive/warehouse/Olympic
+
+*
+
+create the table and load the data:
+hive> create table olympic(athlet string, age int, country string, year int, closing_date string, sport string, gold_medals int, silver_medals int,bronze_medals int, total int)row format delimited fields terminated by '\t'stored as textfile;
+
+hive> load data inpath '/user/hive/warehouse/Olympic'into table olympic;
+
+
+
+
+problem statements:
+
+
+
+1.medals won by each country in descending;
+
+
+
+hive> create table medals_by_country as select country, sum(total) from olympic group by country;
+
+hive> create table medalsbycountry row format delimited fields terminated by ',' as select * from medals_by_country order by c1 desc ;
+
+[root@swap ~]# hadoop fs -copyToLocal /user/hive/warehouse/swap.db/medalsbycountry/000000_0 /home/matlab/Olympic%20Project/
+
+
+
+
+2.Top 10 gold winning countries:
+
+hive> create table top_10_gold row format delimited fields terminated by ',' as select country,sum(gold_medals)as medals from olympic group by country;
+
+hive> create table top10gold row format delimited fields terminated by ',' as select *from top_10_gold order by medals DESC limit 10;
+
+[root@swap ~]# hadoop fs -copyToLocal /user/hive/warehouse/swap.db/top10gold/000000_0 /home/matlab/Olympic%20Project/
+
+
+
+3.Top 5 Athlets who won highest medals:
+
+
+
+hive> create table athlets as select athlet,country,sum(total) from olympic group by athlet,country;
+
+hive> create table athlets_medals row format delimited fields terminated by ',' as select * from athlets order by c2 desc limit 10;
+
+[root@swap ~]# hadoop fs -copyToLocal /user/hive/warehouse/swap.db/athlets_medals/000000_0 /home/matlab/Olympic%20Project/
+ 
+
+
+4.Top 5  Athlets who won highest gold medals:
+
+
+
+hive> create table athletsgold as select athlet,country,sum(gold_medals) from olympic group by athlet,country;
+
+hive> create table athlets_gold_medals row format delimited fields terminated by ',' as select * from athletsgold order by c2 desc limit 10;
+
+[root@swap ~]# hadoop fs -copyToLocal /user/hive/warehouse/swap.db/athlets_gold_medals/000000_0 /home/matlab/Olympic%20Project/
+
+
+
